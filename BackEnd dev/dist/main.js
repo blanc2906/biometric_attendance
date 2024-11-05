@@ -23,7 +23,7 @@ async function bootstrap() {
     catch (error) {
         console.error('Error starting microservice:', error);
     }
-    await app.listen(3000);
+    await app.listen(9000);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

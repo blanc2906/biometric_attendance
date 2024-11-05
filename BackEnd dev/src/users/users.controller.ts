@@ -1,7 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Logger } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { Ctx, MessagePattern, MqttContext, Payload } from '@nestjs/microservices';
 import { User } from './entities/user.entity';
 import { UserLog } from './entities/user_log.entity';
@@ -14,7 +13,7 @@ export class UsersController {
 
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
+  @Post('create_user')
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
@@ -29,62 +28,71 @@ export class UsersController {
     return this.usersService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
 
+  private async handleUserLogin(user: User, latestUserLog: UserLog | null): Promise<void> {
+    const userLog = new UserLog();
+    userLog.user = user;
+    userLog.date = new Date();
+    userLog.time_in = new Date().toTimeString().split(' ')[0];
+    
+    this.logger.log(`${user.name} logged in at ${userLog.time_in}`);
+    
+    await this.usersService.saveUserLog(user.id, {
+      date: userLog.date,
+      time_in: userLog.time_in,
+      time_out: null,
+    });
+    
+    this.userLoginStatus.set(user.id, true);
+  }
+
+  private async handleUserLogout(user: User, latestUserLog: UserLog): Promise<void> {
+    const time_out = new Date().toTimeString().split(' ')[0];
+    this.logger.log(`${user.name} logged out at ${time_out}`);
+    
+    await this.usersService.updateUserLog(
+      user.id, 
+      latestUserLog.date, 
+      latestUserLog.time_in, 
+      { time_out }
+    );
+    
+    this.userLoginStatus.set(user.id, false);
+  }
+
   @MessagePattern('user_topic')
   async getNotifications(@Payload() data: string, @Ctx() context: MqttContext) {
-    
-    const userId = await this.usersService.findUserByFingerID(Number(data));
     try {
-      const user: User = await this.usersService.findOne(userId);
-      if (!user) {
-        this.logger.error(`User with ID ${userId} not found`);
-        return; 
-      }
-
+      const userId = await this.usersService.findUserByFingerID(Number(data));
+      const user = await this.usersService.findOne(userId);
       const latestUserLog = await this.usersService.getLatestUserLog(userId);
       const isLoggedIn = this.userLoginStatus.get(userId) || false;
 
-      if (isLoggedIn) {
-        if (latestUserLog && !latestUserLog.time_out) {
-          latestUserLog.time_out = new Date().toTimeString().split(' ')[0];
-          this.logger.log(`${user.name} logged out at ${latestUserLog.time_out}`);
-          await this.usersService.updateUserLog(userId, latestUserLog.date, latestUserLog.time_in, { time_out: latestUserLog.time_out });
-        }
-        this.userLoginStatus.set(userId, false); 
+      if (isLoggedIn && latestUserLog && !latestUserLog.time_out) {
+        await this.handleUserLogout(user, latestUserLog);
       } else {
-        const userLog = new UserLog();
-        userLog.user = user;
-        userLog.date = new Date();
-        userLog.time_in = new Date().toTimeString().split(' ')[0];
-        this.logger.log(`${user.name} logged in at ${userLog.time_in}`);
-        await this.usersService.saveUserLog(userId, {
-          date: userLog.date,
-          time_in: userLog.time_in,
-          time_out: null, 
-        });
-        this.userLoginStatus.set(userId, true);
+        await this.handleUserLogin(user, latestUserLog);
       }
     } catch (error) {
-      this.logger.error(`Error processing user ${userId}: ${error.message}`);
+      this.logger.error(`Error processing user: ${error.message}`);
     }
   }
-  /*@MessagePattern('create_user')
-  async createUser(@Payload() data: string, @Ctx() context: MqttContext) {
-    
+
+  @MessagePattern('create_user')
+  async createUser(@Payload() data: string) {
+    try {
       const finger_id = Number(data);
-      const createUserDto = new CreateUserDto();
-      createUserDto.name = 'New User'; 
-      createUserDto.finger_id = finger_id;
-      const newUser = await this.usersService.create(createUserDto);
+      const newUser = await this.usersService.create({
+        name: 'New User',
+        finger_id
+      });
       this.logger.log(`Created new user with ID ${newUser.id} for finger ID ${finger_id}`);
-  }*/
+    } catch (error) {
+      this.logger.error(`Error creating user: ${error.message}`);
+    }
+  }
 }

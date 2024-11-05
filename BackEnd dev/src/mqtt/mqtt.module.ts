@@ -24,6 +24,6 @@ dotenv.config();
   ],
   providers: [MqttService],  
   controllers: [MqttController],
-  exports: [ClientsModule],
+  exports: [ClientsModule, MqttService],
 })
 export class MqttModule {} 

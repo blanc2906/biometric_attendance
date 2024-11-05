@@ -18,25 +18,36 @@ const typeorm_1 = require("@nestjs/typeorm");
 const user_entity_1 = require("./entities/user.entity");
 const user_log_entity_1 = require("./entities/user_log.entity");
 const typeorm_2 = require("typeorm");
-const data_1 = require("../excel-export/data");
+const mqtt_service_1 = require("../mqtt/mqtt.service");
 let UsersService = class UsersService {
-    constructor(usersRepository, userLogRepository) {
+    constructor(usersRepository, userLogRepository, mqttService) {
         this.usersRepository = usersRepository;
         this.userLogRepository = userLogRepository;
+        this.mqttService = mqttService;
     }
-    async create(createUserDto) {
-        const user = this.usersRepository.create(createUserDto);
-        return await this.usersRepository.save(user);
-    }
-    async findAll() {
-        return await this.usersRepository.find();
-    }
-    async findOne(id) {
+    async findUserOrThrow(id) {
         const user = await this.usersRepository.findOneBy({ id });
         if (!user) {
             throw new common_1.NotFoundException(`User with ID ${id} not found`);
         }
         return user;
+    }
+    async create(createUserDto) {
+        try {
+            await this.mqttService.publish('create_user', 'create new user');
+            const user = this.usersRepository.create(createUserDto);
+            return await this.usersRepository.save(user);
+        }
+        catch (error) {
+            console.error('Failed to publish create_user message:', error);
+            throw error;
+        }
+    }
+    async findAll() {
+        return await this.usersRepository.find();
+    }
+    async findOne(id) {
+        return await this.findUserOrThrow(id);
     }
     async findUserByFingerID(finger_id) {
         const user = await this.usersRepository.findOne({
@@ -47,34 +58,40 @@ let UsersService = class UsersService {
         }
         return user.id;
     }
-    async update(id, updateUserDto) {
-        await this.findOne(id);
-        await this.usersRepository.update(id, updateUserDto);
-        return await this.findOne(id);
-    }
     async remove(id) {
-        await this.findOne(id);
+        const user = await this.usersRepository.findOne({
+            where: { id },
+            relations: ['userlog']
+        });
+        if (!user) {
+            throw new common_1.NotFoundException(`User with id ${id} not found`);
+        }
+        await this.userLogRepository.delete({ user: { id } });
         await this.usersRepository.delete(id);
+        try {
+            await this.mqttService.publish('delete_user', user.finger_id.toString());
+        }
+        catch (error) {
+            console.error('Failed to publish delete_user message:', error);
+        }
     }
     async saveUserLog(userId, createUserLogDto) {
-        const user = await this.usersRepository.findOneBy({ id: userId });
-        if (!user) {
-            throw new common_1.NotFoundException(`User with ID ${userId} not found`);
-        }
+        const user = await this.findUserOrThrow(userId);
         const userLog = this.userLogRepository.create({
-            user: user,
-            date: createUserLogDto.date,
-            time_in: createUserLogDto.time_in,
-            time_out: createUserLogDto.time_out,
+            user,
+            ...createUserLogDto
         });
         return await this.userLogRepository.save(userLog);
     }
     async updateUserLog(userId, date, time_in, updateUserLogDto) {
-        const user = await this.usersRepository.findOneBy({ id: userId });
+        const user = await this.findUserOrThrow(userId);
         const userLog = await this.userLogRepository.findOne({
             where: { user, date, time_in }
         });
-        userLog.time_out = updateUserLogDto.time_out;
+        if (!userLog) {
+            throw new common_1.NotFoundException(`User log not found`);
+        }
+        Object.assign(userLog, updateUserLogDto);
         return await this.userLogRepository.save(userLog);
     }
     async getLatestUserLog(userId) {
@@ -83,21 +100,19 @@ let UsersService = class UsersService {
             order: { date: 'DESC', time_in: 'DESC' },
             take: 1,
         });
-        return logs.length > 0 ? logs[0] : null;
+        return logs[0] || null;
     }
     async populateData() {
         const userLogs = await this.userLogRepository.find({
             relations: ['user'],
         });
-        data_1.data.length = 0;
-        data_1.data.push(...userLogs.map((log) => ({
+        return userLogs.map((log) => ({
             id: log.user.id.toString(),
             name: log.user.name,
             date: log.date.toString(),
             time_in: log.time_in,
             time_out: log.time_out || "",
-        })));
-        return data_1.data;
+        }));
     }
 };
 exports.UsersService = UsersService;
@@ -106,6 +121,7 @@ exports.UsersService = UsersService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __param(1, (0, typeorm_1.InjectRepository)(user_log_entity_1.UserLog)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        mqtt_service_1.MqttService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

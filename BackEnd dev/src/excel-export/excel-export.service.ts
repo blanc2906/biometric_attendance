@@ -1,5 +1,4 @@
 import { BadRequestException, NotFoundException, Injectable } from '@nestjs/common';
-import { data } from './data';
 import { Workbook } from 'exceljs';
 import { join } from 'path';
 import { UsersService } from 'src/users/users.service';
@@ -8,30 +7,31 @@ import { UsersService } from 'src/users/users.service';
 export class ExcelExportService {
     constructor(private readonly userService: UsersService) {}
     async downloadExcel(): Promise<string> {
-        await this.userService.populateData();
-            if (!data || data.length === 0) {
-                throw new NotFoundException("No data available");
-            }
-    
-            const rows = data.map(doc => Object.values(doc));
-    
-            const workbook = new Workbook();
-            const sheet = workbook.addWorksheet('sheet1');
-    
-            rows.unshift(Object.keys(data[0]));
-            sheet.addRows(rows);
-            this.styleSheet(sheet);
-    
-            const downloadPath = join(process.env.USERPROFILE || '', 'Downloads', 'MyExcelSheet.xlsx');
-    
-            try {
-                await workbook.xlsx.writeFile(downloadPath);
-            } catch (error) {
-                throw new BadRequestException(`Error writing Excel file: ${error.message}`);
-            }
-    
-            return downloadPath;
+        const data = await this.userService.populateData();
+        if (!data || data.length === 0) {
+            throw new NotFoundException("No data available");
         }
+
+        const rows = data.map(doc => Object.values(doc));
+        const workbook = new Workbook();
+        const sheet = workbook.addWorksheet('sheet1');
+
+        // Add headers
+        rows.unshift(Object.keys(data[0]));
+        sheet.addRows(rows);
+        this.styleSheet(sheet);
+
+        const downloadPath = join(process.env.USERPROFILE || '', 'Downloads', 'MyExcelSheet.xlsx');
+
+        try {
+            await workbook.xlsx.writeFile(downloadPath);
+        } catch (error) {
+            throw new BadRequestException(`Error writing Excel file: ${error.message}`);
+        }
+
+        return downloadPath;
+    }
+
     
     private styleSheet(sheet){
         sheet.getColumn(1).width = 5.5

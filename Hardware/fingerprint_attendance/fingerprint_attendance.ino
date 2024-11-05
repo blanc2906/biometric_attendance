@@ -3,49 +3,18 @@
 #include <WiFiClientSecure.h>
 #include <Adafruit_Fingerprint.h>
 #include <HardwareSerial.h>
+#include <secret.h>
 
-const char *ssid = "Phong 304"; 
-const char *password = "Buivietlang29062003";  
+const char *ssid = WIFI_SSID; 
+const char *password = WIFI_PASSWORD;  
 
-const char *mqtt_broker = "ec17fb6c1f804397b9afa141a1c705fb.s1.eu.hivemq.cloud";
-const char *topic = "test_topic";  
-const char *mqtt_username = "langbui";
-const char *mqtt_password = "29062003";
-const int mqtt_port = 8883;  
+const char *mqtt_broker = MQTT_BROKER_URL;
+const char *topic = INIT_TOPIC;  
+const char *mqtt_username = USER_NAME;
+const char *mqtt_password = PASSWORD;
+const int mqtt_port = MQTT_PORT;  
 
-const char *ca_cert = R"EOF(
------BEGIN CERTIFICATE-----
-MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
-TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
-cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4
-WhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu
-ZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY
-MTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc
-h77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+
-0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U
-A5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW
-T8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH
-B5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC
-B5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv
-KBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn
-OlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn
-jh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw
-qHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI
-rU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV
-HRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq
-hkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL
-ubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ
-3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK
-NFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5
-ORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur
-TkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC
-jNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc
-oyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq
-4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA
-mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d
-emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
------END CERTIFICATE-----
-)EOF";
+const char *ca_cert = CERT;
 
 WiFiClientSecure esp_client;
 PubSubClient mqtt_client(esp_client);
@@ -74,15 +43,15 @@ void setup() {
     client_id += String(WiFi.macAddress());
     Serial.printf("The client %s connects to the public MQTT broker\n", client_id.c_str());
     if (mqtt_client.connect(client_id.c_str(), mqtt_username, mqtt_password)) {
-      Serial.println("Public EMQX MQTT broker connected");
+      Serial.println("Public HiveMQ MQTT broker connected");
     } else {
       Serial.print("Failed with state ");
       Serial.print(mqtt_client.state());
       delay(2000);
     }
   }
-  //mqtt_client.publish(topic, "Hi, I'm ESP32 ^^");
   mqtt_client.subscribe(topic);
+  mqtt_client.subscribe("delete_user");
 
   while (!Serial); 
   delay(100);
@@ -98,23 +67,8 @@ void setup() {
     Serial.println("Found fingerprint sensor!");
   } else {
     Serial.println("Did not find fingerprint sensor :(");
-    Serial.println("Check your wiring and verify these points:");
-    Serial.println("1. Sensor VCC connected to 3.3V");
-    Serial.println("2. Sensor GND connected to GND");
-    Serial.println("3. Sensor TX connected to GPIO16 (RX2)");
-    Serial.println("4. Sensor RX connected to GPIO17 (TX2)");
     while (1) { delay(1); }
   }
-
-  Serial.println(F("Reading sensor parameters"));
-  finger.getParameters();
-  Serial.print(F("Status: 0x")); Serial.println(finger.status_reg, HEX);
-  Serial.print(F("Sys ID: 0x")); Serial.println(finger.system_id, HEX);
-  Serial.print(F("Capacity: ")); Serial.println(finger.capacity);
-  Serial.print(F("Security level: ")); Serial.println(finger.security_level);
-  Serial.print(F("Device address: ")); Serial.println(finger.device_addr, HEX);
-  Serial.print(F("Packet len: ")); Serial.println(finger.packet_len);
-  Serial.print(F("Baud rate: ")); Serial.println(finger.baud_rate);
 
   finger.getTemplateCount();
 
@@ -133,10 +87,33 @@ void callback(char *topic, byte *payload, unsigned int length) {
   Serial.print("Message arrived in topic: ");
   Serial.println(topic);
   Serial.print("Message: ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char) payload[i]);
+  
+  // Convert payload to string
+  char message[length + 1];
+  memcpy(message, payload, length);
+  message[length] = '\0';
+  
+  Serial.println(message);
+
+  if (strcmp(topic, "create_user") == 0) {
+    if (strcmp(message, "create new user") == 0) {
+      // Start enrollment mode
+      Serial.println("Starting enrollment mode...");
+      uint8_t newId = enrollFingerprint();
+      if (newId > 0) {
+        // Convert ID to string and publish
+        char idStr[5];
+        itoa(newId, idStr, 10);
+        mqtt_client.publish("create_user", idStr);
+      }
+    }
+  } else if (strcmp(topic, "delete_user") == 0) {
+    uint8_t finger_id = atoi(message);
+    Serial.print("Deleting fingerprint ID #");
+    Serial.println(finger_id);
+    deleteFingerprint(finger_id);
   }
-  Serial.println();
+  
   Serial.println("-----------------------");
 }
 
@@ -148,6 +125,7 @@ void reconnect() {
     if (mqtt_client.connect(client_id.c_str(), mqtt_username, mqtt_password)) {
       Serial.println("Reconnected to MQTT broker");
       mqtt_client.subscribe(topic);
+      mqtt_client.subscribe("delete_user");
     } else {
       Serial.print("Failed to connect, state: ");
       Serial.println(mqtt_client.state());
@@ -179,25 +157,14 @@ void loop() {
   }
   
   mqtt_client.loop(); 
-  
-  if (Serial.available() > 0) {
-    String command = Serial.readStringUntil('\n');
-    if (command.equals("create")) {
-      enrollMode();
-    } 
-  }
-  else {
-      getFingerprintID();
-    }
+  getFingerprintID();
   delay(3000); 
 }           
 
 
 void enrollMode() {
   Serial.println("Ready to enroll a fingerprint!");
-  //Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
-  //id = readnumber();
-  id = finger.getTemplateCount()+1;
+  id = finger.getTemplateCount()+2;
   if (id == 0) {
     return;
   }
@@ -434,4 +401,115 @@ int getFingerprintIDez() {
   Serial.print("Found ID #"); Serial.print(finger.fingerID);
   Serial.print(" with confidence of "); Serial.println(finger.confidence);
   return finger.fingerID;
+}
+
+uint8_t deleteFingerprint(uint8_t id) {
+  uint8_t p = -1;
+  
+  p = finger.deleteModel(id);
+
+  if (p == FINGERPRINT_OK) {
+    Serial.println("Fingerprint deleted!");
+  } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
+    Serial.println("Communication error");
+  } else if (p == FINGERPRINT_BADLOCATION) {
+    Serial.println("Could not delete from that location");
+  } else if (p == FINGERPRINT_FLASHERR) {
+    Serial.println("Error writing to flash");
+  } else {
+    Serial.print("Unknown error: 0x"); Serial.println(p, HEX);
+  }   
+
+  return p;
+}
+
+uint8_t enrollFingerprint() {
+  int id = 1;
+  // Find first available ID
+  while (id <= 127) {
+    if (!finger.loadModel(id))
+      break;
+    id++;
+  }
+  
+  if (id > 127) {
+    Serial.println("No free slot available!");
+    return 0;
+  }
+
+  Serial.print("Enrolling ID #");
+  Serial.println(id);
+  
+  while (!getFingerprintEnroll(id)) {
+    // Keep trying until successful
+    delay(1000);
+  }
+  
+  return id;
+}
+
+bool getFingerprintEnroll(uint8_t id) {
+  int p = -1;
+  Serial.println("Waiting for valid finger to enroll");
+  while (p != FINGERPRINT_OK) {
+    p = finger.getImage();
+    switch (p) {
+    case FINGERPRINT_OK:
+      Serial.println("Image taken");
+      break;
+    case FINGERPRINT_NOFINGER:
+      Serial.println(".");
+      break;
+    case FINGERPRINT_PACKETRECIEVEERR:
+      Serial.println("Communication error");
+      break;
+    case FINGERPRINT_IMAGEFAIL:
+      Serial.println("Imaging error");
+      break;
+    default:
+      Serial.println("Unknown error");
+      break;
+    }
+  }
+
+  p = finger.image2Tz(1);
+  if (p != FINGERPRINT_OK) {
+    Serial.println("Image conversion failed");
+    return false;
+  }
+
+  Serial.println("Remove finger");
+  delay(2000);
+  p = 0;
+  while (p != FINGERPRINT_NOFINGER) {
+    p = finger.getImage();
+  }
+
+  p = -1;
+  Serial.println("Place same finger again");
+  while (p != FINGERPRINT_OK) {
+    p = finger.getImage();
+    if (p == FINGERPRINT_OK) Serial.println("Image taken");
+  }
+
+  p = finger.image2Tz(2);
+  if (p != FINGERPRINT_OK) {
+    Serial.println("Image conversion failed");
+    return false;
+  }
+
+  p = finger.createModel();
+  if (p != FINGERPRINT_OK) {
+    Serial.println("Failed to create model");
+    return false;
+  }
+
+  p = finger.storeModel(id);
+  if (p != FINGERPRINT_OK) {
+    Serial.println("Failed to store model");
+    return false;
+  }
+
+  Serial.println("Fingerprint enrolled successfully!");
+  return true;
 }

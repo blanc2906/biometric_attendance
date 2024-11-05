@@ -35,7 +35,7 @@ exports.MqttModule = MqttModule = __decorate([
         ],
         providers: [mqtt_service_1.MqttService],
         controllers: [mqtt_controller_1.MqttController],
-        exports: [microservices_1.ClientsModule],
+        exports: [microservices_1.ClientsModule, mqtt_service_1.MqttService],
     })
 ], MqttModule);
 //# sourceMappingURL=mqtt.module.js.map

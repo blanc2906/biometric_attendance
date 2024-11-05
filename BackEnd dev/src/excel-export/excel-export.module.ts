@@ -6,10 +6,16 @@ import { User } from 'src/users/entities/user.entity';
 import { UserLog } from 'src/users/entities/user_log.entity';
 import { UsersModule } from 'src/users/users.module';
 import { UsersService } from 'src/users/users.service';
+import { MqttModule } from 'src/mqtt/mqtt.module';
+import { MqttService } from 'src/mqtt/mqtt.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User,UserLog]),UsersModule],
-  providers: [ExcelExportService, UsersService],
+  imports: [
+    TypeOrmModule.forFeature([User, UserLog]),
+    UsersModule,
+    MqttModule
+  ],
+  providers: [ExcelExportService, UsersService, MqttService],
   controllers: [ExcelExportController]
 })
 export class ExcelExportModule {}

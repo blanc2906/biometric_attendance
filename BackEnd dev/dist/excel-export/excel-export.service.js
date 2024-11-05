@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExcelExportService = void 0;
 const common_1 = require("@nestjs/common");
-const data_1 = require("./data");
 const exceljs_1 = require("exceljs");
 const path_1 = require("path");
 const users_service_1 = require("../users/users.service");
@@ -20,14 +19,14 @@ let ExcelExportService = class ExcelExportService {
         this.userService = userService;
     }
     async downloadExcel() {
-        await this.userService.populateData();
-        if (!data_1.data || data_1.data.length === 0) {
+        const data = await this.userService.populateData();
+        if (!data || data.length === 0) {
             throw new common_1.NotFoundException("No data available");
         }
-        const rows = data_1.data.map(doc => Object.values(doc));
+        const rows = data.map(doc => Object.values(doc));
         const workbook = new exceljs_1.Workbook();
         const sheet = workbook.addWorksheet('sheet1');
-        rows.unshift(Object.keys(data_1.data[0]));
+        rows.unshift(Object.keys(data[0]));
         sheet.addRows(rows);
         this.styleSheet(sheet);
         const downloadPath = (0, path_1.join)(process.env.USERPROFILE || '', 'Downloads', 'MyExcelSheet.xlsx');

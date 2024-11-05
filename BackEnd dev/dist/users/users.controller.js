@@ -17,7 +17,6 @@ exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("./users.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
-const update_user_dto_1 = require("./dto/update-user.dto");
 const microservices_1 = require("@nestjs/microservices");
 const user_log_entity_1 = require("./entities/user_log.entity");
 let UsersController = UsersController_1 = class UsersController {
@@ -35,60 +34,62 @@ let UsersController = UsersController_1 = class UsersController {
     findOne(id) {
         return this.usersService.findOne(+id);
     }
-    update(id, updateUserDto) {
-        return this.usersService.update(+id, updateUserDto);
-    }
     remove(id) {
         return this.usersService.remove(+id);
     }
+    async handleUserLogin(user, latestUserLog) {
+        const userLog = new user_log_entity_1.UserLog();
+        userLog.user = user;
+        userLog.date = new Date();
+        userLog.time_in = new Date().toTimeString().split(' ')[0];
+        this.logger.log(`${user.name} logged in at ${userLog.time_in}`);
+        await this.usersService.saveUserLog(user.id, {
+            date: userLog.date,
+            time_in: userLog.time_in,
+            time_out: null,
+        });
+        this.userLoginStatus.set(user.id, true);
+    }
+    async handleUserLogout(user, latestUserLog) {
+        const time_out = new Date().toTimeString().split(' ')[0];
+        this.logger.log(`${user.name} logged out at ${time_out}`);
+        await this.usersService.updateUserLog(user.id, latestUserLog.date, latestUserLog.time_in, { time_out });
+        this.userLoginStatus.set(user.id, false);
+    }
     async getNotifications(data, context) {
-        const userId = await this.usersService.findUserByFingerID(Number(data));
         try {
+            const userId = await this.usersService.findUserByFingerID(Number(data));
             const user = await this.usersService.findOne(userId);
-            if (!user) {
-                this.logger.error(`User with ID ${userId} not found`);
-                return;
-            }
             const latestUserLog = await this.usersService.getLatestUserLog(userId);
             const isLoggedIn = this.userLoginStatus.get(userId) || false;
-            if (isLoggedIn) {
-                if (latestUserLog && !latestUserLog.time_out) {
-                    latestUserLog.time_out = new Date().toTimeString().split(' ')[0];
-                    this.logger.log(`${user.name} logged out at ${latestUserLog.time_out}`);
-                    await this.usersService.updateUserLog(userId, latestUserLog.date, latestUserLog.time_in, { time_out: latestUserLog.time_out });
-                }
-                this.userLoginStatus.set(userId, false);
+            if (isLoggedIn && latestUserLog && !latestUserLog.time_out) {
+                await this.handleUserLogout(user, latestUserLog);
             }
             else {
-                const userLog = new user_log_entity_1.UserLog();
-                userLog.user = user;
-                userLog.date = new Date();
-                userLog.time_in = new Date().toTimeString().split(' ')[0];
-                this.logger.log(`${user.name} logged in at ${userLog.time_in}`);
-                await this.usersService.saveUserLog(userId, {
-                    date: userLog.date,
-                    time_in: userLog.time_in,
-                    time_out: null,
-                });
-                this.userLoginStatus.set(userId, true);
+                await this.handleUserLogin(user, latestUserLog);
             }
         }
         catch (error) {
-            this.logger.error(`Error processing user ${userId}: ${error.message}`);
+            this.logger.error(`Error processing user: ${error.message}`);
         }
     }
-    async createUser(data, context) {
-        const finger_id = Number(data);
-        const createUserDto = new create_user_dto_1.CreateUserDto();
-        createUserDto.name = 'New User';
-        createUserDto.finger_id = finger_id;
-        const newUser = await this.usersService.create(createUserDto);
-        this.logger.log(`Created new user with ID ${newUser.id} for finger ID ${finger_id}`);
+    async createUser(data) {
+        try {
+            const finger_id = Number(data);
+            const newUser = await this.usersService.create({
+                name: 'New User',
+                finger_id
+            });
+            this.logger.log(`Created new user with ID ${newUser.id} for finger ID ${finger_id}`);
+        }
+        catch (error) {
+            this.logger.error(`Error creating user: ${error.message}`);
+        }
     }
 };
 exports.UsersController = UsersController;
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Post)('create_user'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
@@ -108,14 +109,6 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_user_dto_1.UpdateUserDto]),
-    __metadata("design:returntype", void 0)
-], UsersController.prototype, "update", null);
-__decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -133,9 +126,8 @@ __decorate([
 __decorate([
     (0, microservices_1.MessagePattern)('create_user'),
     __param(0, (0, microservices_1.Payload)()),
-    __param(1, (0, microservices_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, microservices_1.MqttContext]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "createUser", null);
 exports.UsersController = UsersController = UsersController_1 = __decorate([
