@@ -125,7 +125,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "remove", null);
 __decorate([
-    (0, microservices_1.MessagePattern)('user_topic'),
+    (0, microservices_1.MessagePattern)('user_log'),
     __param(0, (0, microservices_1.Payload)()),
     __param(1, (0, microservices_1.Ctx)()),
     __metadata("design:type", Function),

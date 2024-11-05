@@ -70,7 +70,7 @@ export class UsersController {
     this.userLoginStatus.set(user.id, false);
   }
 
-  @MessagePattern('user_topic')
+  @MessagePattern('user_log')
   async getNotifications(@Payload() data: string, @Ctx() context: MqttContext) {
     try {
       const userId = await this.usersService.findUserByFingerID(Number(data));
