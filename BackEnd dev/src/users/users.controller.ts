@@ -14,8 +14,14 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('create_user')
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create() {
+    try {
+      await this.usersService.initiateUserCreation();
+      return { message: "Fingerprint enrollment initiated" };
+    } catch (error) {
+      this.logger.error(`Error initiating user creation: ${error.message}`);
+      throw error;
+    }
   }
 
   @Get()
@@ -82,10 +88,16 @@ export class UsersController {
     }
   }
 
-  @MessagePattern('create_user')
+  @MessagePattern('create_new_user')
   async createUser(@Payload() data: string) {
     try {
       const finger_id = Number(data);
+      
+      if (isNaN(finger_id)) {
+        this.logger.error(`Invalid finger_id received: ${data}`);
+        return;
+      }
+      
       const newUser = await this.usersService.create({
         name: 'New User',
         finger_id

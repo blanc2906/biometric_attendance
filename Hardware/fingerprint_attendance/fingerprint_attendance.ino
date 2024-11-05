@@ -104,7 +104,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
         // Convert ID to string and publish
         char idStr[5];
         itoa(newId, idStr, 10);
-        mqtt_client.publish("create_user", idStr);
+        mqtt_client.publish("create_new_user", idStr);
       }
     }
   } else if (strcmp(topic, "delete_user") == 0) {
@@ -162,7 +162,7 @@ void loop() {
 }           
 
 
-void enrollMode() {
+/*void enrollMode() {
   Serial.println("Ready to enroll a fingerprint!");
   id = finger.getTemplateCount()+2;
   if (id == 0) {
@@ -316,7 +316,7 @@ uint8_t getFingerprintEnroll() {
   }
 
   return true;
-}
+}*/
 
 uint8_t getFingerprintID() {
   uint8_t p = finger.getImage();

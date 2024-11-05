@@ -26,14 +26,33 @@ export class UsersService {
     return user;
   }
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async initiateUserCreation(): Promise<void> {
     try {
       await this.mqttService.publish('create_user', 'create new user');
-      const user = this.usersRepository.create(createUserDto);
-      return await this.usersRepository.save(user);
     } catch (error) {
       console.error('Failed to publish create_user message:', error);
       throw error;
+    }
+  }
+
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    try {
+      if (isNaN(createUserDto.finger_id)) {
+        throw new Error('Invalid finger_id');
+      }
+      
+      const existingUser = await this.usersRepository.findOne({
+        where: { finger_id: createUserDto.finger_id }
+      });
+      
+      if (existingUser) {
+        throw new Error(`User with finger_id ${createUserDto.finger_id} already exists`);
+      }
+      
+      const user = this.usersRepository.create(createUserDto);
+      return await this.usersRepository.save(user);
+    } catch (error) {
+      throw new Error(`Failed to create user: ${error.message}`);
     }
   }
 
