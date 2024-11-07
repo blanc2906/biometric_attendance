@@ -5,15 +5,15 @@
 #include <FS.h>
 #include <WiFi.h>
 
-const char* ssid = "Phong 304";
-const char* password = "Buivietlang29062003";
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
 
-#define emailSenderAccount    "crazyguyk3@gmail.com"
-#define emailSenderPassword   "tttl ginp ljds ugym"
-#define smtpServer            "smtp.gmail.com"
-#define smtpServerPort        465
-#define emailSubject          "ESP32-CAM Photo Captured"
-#define emailRecipient        "buivietlang2k@gmail.com"
+#define emailSenderAccount    SENDER_ACCOUNT
+#define emailSenderPassword   SENDER_PASSWORD
+#define smtpServer            SMTP_SERVER
+#define smtpServerPort        SMTP_SERVER_PORT
+#define emailSubject          EMAIL_SUBJECT
+#define emailRecipient        EMAIL_RECEIPIENT
 
 #define CAMERA_MODEL_AI_THINKER
 
