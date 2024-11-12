@@ -1,11 +1,14 @@
 import { UsersService } from './users.service';
 import { MqttContext } from '@nestjs/microservices';
 import { User } from './entities/user.entity';
+import { FaceRecognitionService } from './face-recognition.service';
+import { FaceRecognitionDto } from './dto/face-recognition.dto';
 export declare class UsersController {
     private readonly usersService;
+    private readonly faceRecognitionService;
     private readonly logger;
     private userLoginStatus;
-    constructor(usersService: UsersService);
+    constructor(usersService: UsersService, faceRecognitionService: FaceRecognitionService);
     create(): Promise<{
         message: string;
     }>;
@@ -16,4 +19,10 @@ export declare class UsersController {
     private handleUserLogout;
     getNotifications(data: string, context: MqttContext): Promise<void>;
     createUser(data: string): Promise<void>;
+    addFace(id: string, faceRecognitionDto: FaceRecognitionDto): Promise<{
+        success: boolean;
+        message: string;
+        data: import("./entities/face-descriptor.entity").FaceDescriptor;
+    }>;
+    recognizeFace(faceRecognitionDto: FaceRecognitionDto): Promise<User>;
 }

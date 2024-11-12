@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Logger, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Ctx, MessagePattern, MqttContext, Payload } from '@nestjs/microservices';
 import { User } from './entities/user.entity';
 import { UserLog } from './entities/user_log.entity';
+import { FaceRecognitionService } from './face-recognition.service';
+import { FaceRecognitionDto } from './dto/face-recognition.dto';
 
 @Controller('users')
 export class UsersController {
@@ -11,7 +13,10 @@ export class UsersController {
 
   private userLoginStatus: Map<number, boolean> = new Map();
 
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly faceRecognitionService: FaceRecognitionService
+  ) {}
 
   @Post('create_user')
   async create() {
@@ -105,6 +110,56 @@ export class UsersController {
       this.logger.log(`Created new user with ID ${newUser.id} for finger ID ${finger_id}`);
     } catch (error) {
       this.logger.error(`Error creating user: ${error.message}`);
+    }
+  }
+
+  @Post(':id/face')
+  async addFace(
+    @Param('id') id: string,
+    @Body() faceRecognitionDto: FaceRecognitionDto
+  ) {
+    try {
+      console.log(`Processing face addition for user ${id}`);
+      console.log('Image path:', faceRecognitionDto.imagePath);
+      
+      const result = await this.faceRecognitionService.addFaceDescriptor(
+        +id,
+        faceRecognitionDto.imagePath
+      );
+      
+      console.log('Face addition result:', result);
+      
+      return {
+        success: true,
+        message: 'Face descriptor added successfully',
+        data: result
+      };
+    } catch (error) {
+      console.error('Full error:', error);
+      this.logger.error(`Error adding face: ${error.message}`);
+      throw new HttpException({
+        status: HttpStatus.BAD_REQUEST,
+        error: error.message,
+        stack: error.stack
+      }, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('recognize')
+  async recognizeFace(@Body() faceRecognitionDto: FaceRecognitionDto) {
+    try {
+      const user = await this.faceRecognitionService.recognizeFace(
+        faceRecognitionDto.imagePath
+      );
+      
+      if (!user) {
+        throw new NotFoundException('Face not recognized');
+      }
+
+      return user;
+    } catch (error) {
+      this.logger.error(`Error recognizing face: ${error.message}`);
+      throw error;
     }
   }
 }

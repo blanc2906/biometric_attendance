@@ -1,5 +1,6 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { UserLog } from "./user_log.entity";
+import { FaceDescriptor } from "./face-descriptor.entity";
 
 @Entity()
 export class User {
@@ -15,4 +16,10 @@ export class User {
 
     @OneToMany(() => UserLog, (userlog) => userlog.user, { cascade: true })
     userlog: UserLog[];
+
+    @OneToOne(() => FaceDescriptor, faceDescriptor => faceDescriptor.user, { 
+        cascade: true,
+        onDelete: 'CASCADE' 
+    })
+    faceDescriptor: FaceDescriptor;
 }

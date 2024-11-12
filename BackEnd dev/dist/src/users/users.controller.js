@@ -18,9 +18,12 @@ const common_1 = require("@nestjs/common");
 const users_service_1 = require("./users.service");
 const microservices_1 = require("@nestjs/microservices");
 const user_log_entity_1 = require("./entities/user_log.entity");
+const face_recognition_service_1 = require("./face-recognition.service");
+const face_recognition_dto_1 = require("./dto/face-recognition.dto");
 let UsersController = UsersController_1 = class UsersController {
-    constructor(usersService) {
+    constructor(usersService, faceRecognitionService) {
         this.usersService = usersService;
+        this.faceRecognitionService = faceRecognitionService;
         this.logger = new common_1.Logger(UsersController_1.name);
         this.userLoginStatus = new Map();
     }
@@ -96,6 +99,41 @@ let UsersController = UsersController_1 = class UsersController {
             this.logger.error(`Error creating user: ${error.message}`);
         }
     }
+    async addFace(id, faceRecognitionDto) {
+        try {
+            console.log(`Processing face addition for user ${id}`);
+            console.log('Image path:', faceRecognitionDto.imagePath);
+            const result = await this.faceRecognitionService.addFaceDescriptor(+id, faceRecognitionDto.imagePath);
+            console.log('Face addition result:', result);
+            return {
+                success: true,
+                message: 'Face descriptor added successfully',
+                data: result
+            };
+        }
+        catch (error) {
+            console.error('Full error:', error);
+            this.logger.error(`Error adding face: ${error.message}`);
+            throw new common_1.HttpException({
+                status: common_1.HttpStatus.BAD_REQUEST,
+                error: error.message,
+                stack: error.stack
+            }, common_1.HttpStatus.BAD_REQUEST);
+        }
+    }
+    async recognizeFace(faceRecognitionDto) {
+        try {
+            const user = await this.faceRecognitionService.recognizeFace(faceRecognitionDto.imagePath);
+            if (!user) {
+                throw new common_1.NotFoundException('Face not recognized');
+            }
+            return user;
+        }
+        catch (error) {
+            this.logger.error(`Error recognizing face: ${error.message}`);
+            throw error;
+        }
+    }
 };
 exports.UsersController = UsersController;
 __decorate([
@@ -139,8 +177,24 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "createUser", null);
+__decorate([
+    (0, common_1.Post)(':id/face'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, face_recognition_dto_1.FaceRecognitionDto]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "addFace", null);
+__decorate([
+    (0, common_1.Post)('recognize'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [face_recognition_dto_1.FaceRecognitionDto]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "recognizeFace", null);
 exports.UsersController = UsersController = UsersController_1 = __decorate([
     (0, common_1.Controller)('users'),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
+    __metadata("design:paramtypes", [users_service_1.UsersService,
+        face_recognition_service_1.FaceRecognitionService])
 ], UsersController);
 //# sourceMappingURL=users.controller.js.map

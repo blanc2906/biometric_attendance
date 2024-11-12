@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const typeorm_1 = require("typeorm");
 const user_log_entity_1 = require("./user_log.entity");
+const face_descriptor_entity_1 = require("./face-descriptor.entity");
 let User = class User {
 };
 exports.User = User;
@@ -31,6 +32,13 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => user_log_entity_1.UserLog, (userlog) => userlog.user, { cascade: true }),
     __metadata("design:type", Array)
 ], User.prototype, "userlog", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => face_descriptor_entity_1.FaceDescriptor, faceDescriptor => faceDescriptor.user, {
+        cascade: true,
+        onDelete: 'CASCADE'
+    }),
+    __metadata("design:type", face_descriptor_entity_1.FaceDescriptor)
+], User.prototype, "faceDescriptor", void 0);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)()
 ], User);

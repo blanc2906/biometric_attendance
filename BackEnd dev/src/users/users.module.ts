@@ -6,14 +6,16 @@ import { User } from './entities/user.entity';
 import { MqttModule } from 'src/mqtt/mqtt.module';
 import { UserLog } from './entities/user_log.entity';
 import { MqttService } from 'src/mqtt/mqtt.service';
+import { FaceDescriptor } from './entities/face-descriptor.entity';
+import { FaceRecognitionService } from './face-recognition.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, UserLog]),
+    TypeOrmModule.forFeature([User, UserLog, FaceDescriptor]),
     MqttModule
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService,FaceRecognitionService],
   exports: [UsersService]
 })
 export class UsersModule {}
